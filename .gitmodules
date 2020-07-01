@@ -13,3 +13,6 @@
 [submodule "source/meta-picard"]
 	path = source/meta-picard
 	url = git@github.com:compenguy/meta-picard.git
+[submodule "source/meta-rust"]
+	path = source/meta-rust
+	url = git@github.com:meta-rust/meta-rust.git
