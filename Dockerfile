@@ -40,5 +40,7 @@ RUN useradd -s /bin/bash -d /home/yocto -gusers -Gstaff,sudo yocto \
 USER yocto
 WORKDIR /home/yocto
 
-ENV IMAGE=picard-minimal
-CMD bash -c 'source source/openembedded-core/oe-init-build-env && bitbake ${IMAGE}'
+ENV NICE=19
+ENV BBARGS=
+ENV BBRECIPE=picard-carbleurator
+CMD bash -c 'source source/openembedded-core/oe-init-build-env && nice -n ${NICE} bitbake ${BBARGS} ${BBRECIPE}'
