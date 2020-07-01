@@ -1,0 +1,15 @@
+[submodule "source/openembedded-core"]
+	path = source/openembedded-core
+	url = git://git.openembedded.org/openembedded-core
+[submodule "source/bitbake"]
+	path = source/bitbake
+	url = git://git.openembedded.org/bitbake
+[submodule "source/meta-openembedded"]
+	path = source/meta-openembedded
+	url = git://git.openembedded.org/meta-openembedded
+[submodule "source/meta-raspberrypi"]
+	path = source/meta-raspberrypi
+	url = git@github.com:agherzan/meta-raspberrypi.git
+[submodule "source/meta-picard"]
+	path = source/meta-picard
+	url = git@github.com:compenguy/meta-picard.git
