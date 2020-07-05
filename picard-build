@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+SELF="$(basename "${BASH_SOURCE[0]}")"
+SELF_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+function usage() {
+  echo "Usage: ${SELF} [ subcommand [ -i <image name> ] [ -d <target disk> ] ] [-h]" 1>&2
+  echo "  Application flags:" 1>&2
+  echo "    -h	        Display command help" 1>&2
+  echo "  Subcommands:" 1>&2
+  echo "    clean	        Clean the default image" 1>&2
+  echo "    build	        Build the default image" 1>&2
+  echo "    flash	        Flash the default image" 1>&2
+  echo "    all	        Build and flash the default image" 1>&2
+  echo "  Subcommand flags:" 1>&2
+  echo "    -i	        Set which image to build/flash (${image:-unset})" 1>&2
+  echo "    -d	        Set which disk to flash image to (${disk:-unset})" 1>&2
+  exit 0
+}
+
+function process_subcommand_args() {
+  #local OPTIND=2
+  local OPTIND
+  echo "processing subcommand args: $@"
+  while getopts ":d:i:" opt; do
+    case "${opt}" in
+      i)
+        echo "Setting image to operate on to ${OPTARG}"
+        image="${OPTARG}"
+        ;;
+      d)
+        echo "Setting target disk to ${OPTARG}"
+        disk="${OPTARG}"
+        ;;
+      \?)
+        echo "Invalid option: ${OPTARG}" 1>&2
+        exit 1
+        ;;
+      :)
+        echo "Invalid option: ${OPTARG} requires an argument" 1>&2
+        exit 1
+        ;;
+    esac
+  done
+  shift $((OPTIND-1))
+}
+
+function process_args() {
+  local OPTIND
+  echo "processing args: $@"
+  while getopts ":h" opt; do
+    case "${opt}" in
+      h)
+        usage
+        ;;
+    esac
+  done
+  shift $((OPTIND-1))
+}
+
+function clean_image() {
+  docker run -it \
+    --mount type=bind,src="${SELF_DIR}",dst=/home/yocto \
+    --env BBARGS="-c clean" \
+    --env BBRECIPE="${image}" \
+    yoctobuilder
+}
+
+function build_image() {
+  docker run -it \
+    --mount type=bind,src="${SELF_DIR}",dst=/home/yocto \
+    --env BBRECIPE="${image}" \
+    yoctobuilder
+}
+
+function flash_image() {
+  local source_image="${SELF_DIR}/build/tmp-glibc/deploy/images/raspberrypi3-64/${image}-raspberrypi3-64.wic.bz2"
+  if [ ! -r "${source_image}" ]; then
+    echo "Invalid image source (${source_image})" 1>&2
+    exit 1
+  fi
+  if [ ! -e "${disk}" ]; then
+    echo "Invalid destination device (${disk})" 1>&2
+    exit 1
+  fi
+
+  sudo bmaptool copy "${source_image}" "${disk}"
+}
+
+# begin script
+image="picard-carbleurator"
+disk=""
+
+subcommand=$1; shift
+case "${subcommand}" in
+  clean)
+    process_subcommand_args "$@"
+    clean_image
+    ;;
+  build)
+    process_subcommand_args "$@"
+    build_image
+    ;;
+  flash)
+    process_subcommand_args "$@"
+    flash_image
+    ;;
+  all)
+    process_subcommand_args "$@"
+    build_image
+    flash_image
+    ;;
+  *)
+    process_args "$@"
+    ;;
+esac
+
