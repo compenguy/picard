@@ -83,6 +83,7 @@ function flash_image() {
     exit 1
   fi
 
+  sudo umount $(ls ${disk}*)
   sudo bmaptool copy "${source_image}" "${disk}"
 }
 
