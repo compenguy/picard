@@ -20,7 +20,7 @@ function usage() {
 function process_subcommand_args() {
   #local OPTIND=2
   local OPTIND
-  echo "processing subcommand args: $@"
+  #echo "processing subcommand args: $@"
   while getopts ":d:i:" opt; do
     case "${opt}" in
       i)
@@ -51,6 +51,9 @@ function process_args() {
     case "${opt}" in
       h)
         usage
+        ;;
+      *)
+        echo "Unexpected argument: ${opt}"
         ;;
     esac
   done
@@ -91,21 +94,24 @@ function flash_image() {
 image="picard-carbleurator"
 disk=""
 
-subcommand=$1; shift
-case "${subcommand}" in
+case "$1" in
   clean)
+    shift
     process_subcommand_args "$@"
     clean_image
     ;;
   build)
+    shift
     process_subcommand_args "$@"
     build_image
     ;;
   flash)
+    shift
     process_subcommand_args "$@"
     flash_image
     ;;
   all)
+    shift
     process_subcommand_args "$@"
     build_image
     flash_image
