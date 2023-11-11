@@ -1,10 +1,3 @@
 .bash_history
 .wget-hsts
-build/*.log
-build/*.lock
-build/*.sock
-build/buildhistory/**
-build/cache/**
-build/downloads/**
-build/sstate-cache/**
-build/tmp-glibc/**
+build/**
