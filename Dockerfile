@@ -1,25 +1,41 @@
-ARG BASE=ubuntu:bionic
+ARG BASE=ubuntu:jammy
 FROM ${BASE}
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 # package list specified here:
-# https://www.yoctoproject.org/docs/2.0/yocto-project-qs/yocto-project-qs.html
+# https://docs.yoctoproject.org/brief-yoctoprojectqs/index.html
+# Plus ca-certificates because of a let's encrypt issue with ubuntu:jammy
 RUN apt-get update \
-    && apt-get install -y \
-      python3 \
-      python3-distutils \
+    && apt-get install --no-install-recommends -y \
       gawk \
       wget \
-      git-core \
+      git \
       diffstat \
       unzip \
       texinfo \
-      gcc-multilib \
+      gcc \
       build-essential \
       chrpath \
       socat \
       cpio \
+      python3 \
+      python3-pip \
+      python3-pexpect \
+      xz-utils \
+      debianutils \
+      iputils-ping \
+      python3-git \
+      python3-jinja2 \
+      libegl1-mesa \
+      libsdl1.2-dev \
+      python3-subunit \
+      mesa-common-dev \
+      zstd \
+      liblz4-tool \
+      file \
+      locales \
+      ca-certificates\
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update \
