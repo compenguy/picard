@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#set -x
 SELF="$(basename "${BASH_SOURCE[0]}")"
 SELF_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -46,7 +47,7 @@ function process_subcommand_args() {
 
 function process_args() {
   local OPTIND
-  echo "processing args: $@"
+  #echo "processing args: $@"
   while getopts ":h" opt; do
     case "${opt}" in
       h)
@@ -68,15 +69,46 @@ function clean_image() {
     yoctobuilder
 }
 
-function build_image() {
+function env_image() {
   docker run -it \
     --mount type=bind,src="${SELF_DIR}",dst=/home/yocto \
+    --env BBARGS="-e" \
+    --env BBRECIPE="${image}" \
+    yoctobuilder
+}
+
+function init_site() {
+  [ -r "${SELF_DIR}"/build/conf/site.conf ] && return
+  mkdir -p "${SELF_DIR}"/build/conf/
+  cat << EOF > "${SELF_DIR}"/build/conf/site.conf
+INHERIT += "buildhistory"
+BUILDHISTORY_COMMIT = "1"
+
+PARALLEL_MAKE = "-j 4"
+BB_NUMBER_THREADS = "4"
+
+#BB_GIT_SHALLOW_DEPTH = "1"
+
+BB_NICE_LEVEL = "20"
+BB_TASK_NICE_LEVEL = "20"
+BB_TASK_NICE_LEVEL_task-testimage = "5"
+
+BB_TASK_IONICE_LEVEL = "2.7"
+EOF
+}
+
+function build_image() {
+  init_site
+  docker run -it \
+    --mount type=bind,src="${SELF_DIR}",dst=/home/yocto \
+    --env TEMPLATECONF=../source/meta-picard/conf \
+    --env DISTROCONF=../source/meta-picard/conf \
     --env BBRECIPE="${image}" \
     yoctobuilder
 }
 
 function flash_image() {
-  local source_image="${SELF_DIR}/build/tmp-glibc/deploy/images/raspberrypi3-64/${image}-raspberrypi3-64.wic.bz2"
+  local source_image="${SELF_DIR}/build/tmp-glibc/deploy/images/raspberrypi3/${image}-raspberrypi3.wic.bz2"
   if [ ! -r "${source_image}" ]; then
     echo "Invalid image source (${source_image})" 1>&2
     exit 1
@@ -100,6 +132,11 @@ case "$1" in
     process_subcommand_args "$@"
     clean_image
     ;;
+  env)
+    shift
+    process_subcommand_args "$@"
+    env_image
+    ;;
   build)
     shift
     process_subcommand_args "$@"
@@ -115,6 +152,11 @@ case "$1" in
     process_subcommand_args "$@"
     build_image
     flash_image
+    ;;
+  "")
+    echo "No actions specified"
+    echo ""
+    usage
     ;;
   *)
     process_args "$@"
